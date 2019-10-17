@@ -1,0 +1,179 @@
+CREATE TABLE surveys (
+  survey_id   VARCHAR2(20)  NOT NULL,
+  survey_desc VARCHAR2(300) NOT NULL,
+  start_date  DATE          NOT NULL,
+  end_date    DATE          NOT NULL
+)
+  STORAGE (
+    NEXT       1024 K
+  )
+/
+
+ALTER TABLE surveys
+  ADD CONSTRAINT surveys_pk PRIMARY KEY (
+    survey_id
+  )
+  USING INDEX
+    STORAGE (
+      NEXT       1024 K
+    )
+/
+
+COMMENT ON TABLE surveys IS '調查';
+
+COMMENT ON COLUMN surveys.survey_id IS 'PK';
+COMMENT ON COLUMN surveys.survey_desc IS '調查名稱';
+COMMENT ON COLUMN surveys.start_date IS '調查開始日期';
+COMMENT ON COLUMN surveys.end_date IS '調查結束日期';
+
+CREATE TABLE survey_items (
+  item_id       VARCHAR2(20)  NOT NULL,
+  item_desc     VARCHAR2(300) NOT NULL,
+  survey_id     VARCHAR2(20)  NULL,
+  ismultiselect CHAR(1 BYTE)  DEFAULT 'N' NOT NULL,
+  isignore      CHAR(1 BYTE)  DEFAULT 'N' NOT NULL
+)
+  STORAGE (
+    NEXT       1024 K
+  )
+/
+
+ALTER TABLE survey_items
+  ADD CONSTRAINT survey_items_pk PRIMARY KEY (
+    item_id
+  )
+  USING INDEX
+    STORAGE (
+      NEXT       1024 K
+    )
+/
+
+ALTER TABLE survey_items
+  ADD CONSTRAINT suryvey_items_fk FOREIGN KEY (survey_id)
+  REFERENCES surveys(survey_id);
+
+COMMENT ON TABLE survey_items IS '調查的項目';
+
+COMMENT ON COLUMN survey_items.item_id IS 'PK';
+COMMENT ON COLUMN survey_items.item_desc IS '調查的項目';
+COMMENT ON COLUMN survey_items.survey_id IS 'FK';
+COMMENT ON COLUMN survey_items.ismultiselect IS '是否可以選擇多個選項（Y/N）';
+COMMENT ON COLUMN survey_items.isignore IS '是否可以忽略（N/Y）';
+
+CREATE TABLE survey_item_values (
+  value_id   VARCHAR2(20)  NOT NULL,
+  value_desc VARCHAR2(300) NULL,
+  item_id    VARCHAR2(20)  NOT NULL,
+  user_input CHAR(1 BYTE)  DEFAULT 'N' NOT NULL
+)
+  STORAGE (
+    NEXT       1024 K
+  )
+/
+
+ALTER TABLE survey_item_values
+  ADD CONSTRAINT survey_values_pk PRIMARY KEY (
+    value_id
+  )
+  USING INDEX
+    STORAGE (
+      NEXT       1024 K
+    )
+/
+
+ALTER TABLE survey_item_values
+  ADD CONSTRAINT value_survey_items_fk FOREIGN KEY (
+    item_id
+  ) REFERENCES survey_items (
+    item_id
+  )
+/
+
+COMMENT ON TABLE survey_item_values IS '調查項目的選項';
+
+COMMENT ON COLUMN survey_item_values.value_id IS 'PK';
+COMMENT ON COLUMN survey_item_values.value_desc IS '調查項目的選項';
+COMMENT ON COLUMN survey_item_values.item_id IS 'FK';
+COMMENT ON COLUMN survey_item_values.user_input IS '是否用戶輸入(Y/N)';
+
+CREATE TABLE survey_results (
+  result_id       VARCHAR2(20) NOT NULL,
+  survey_id       VARCHAR2(20) NOT NULL,
+  ip_address      VARCHAR2(20) NOT NULL,
+  submit_datetime DATE         NOT NULL
+)
+  STORAGE (
+    NEXT       1024 K
+  )
+/
+
+ALTER TABLE survey_results
+  ADD CONSTRAINT survey_results_pk PRIMARY KEY (
+    result_id
+  )
+  USING INDEX
+    STORAGE (
+      NEXT       1024 K
+    )
+/
+
+ALTER TABLE survey_results
+  ADD CONSTRAINT result_surveys_fk FOREIGN KEY (
+    survey_id
+  ) REFERENCES surveys (
+    survey_id
+  )
+/
+
+COMMENT ON TABLE survey_results IS '調查結果';
+
+COMMENT ON COLUMN survey_results.result_id IS 'PK';
+COMMENT ON COLUMN survey_results.survey_id IS 'FK';
+COMMENT ON COLUMN survey_results.ip_address IS '電腦IP';
+COMMENT ON COLUMN survey_results.submit_datetime IS '調查收回時間';
+
+
+CREATE TABLE survey_result_details (
+  detail_id  VARCHAR2(20)  NOT NULL,
+  result_id  VARCHAR2(20)  NOT NULL,
+  value_id   VARCHAR2(20)  NOT NULL,
+  value_desc VARCHAR2(300) NULL
+)
+  STORAGE (
+    NEXT       1024 K
+  )
+/
+
+ALTER TABLE survey_result_details
+  ADD CONSTRAINT survey_details_pk PRIMARY KEY (
+    detail_id
+  )
+  USING INDEX
+    STORAGE (
+      NEXT       1024 K
+    )
+/
+
+ALTER TABLE survey_result_details
+  ADD CONSTRAINT detail_survey_results_fk FOREIGN KEY (
+    result_id
+  ) REFERENCES survey_results (
+    result_id
+  )
+/
+
+ALTER TABLE survey_result_details
+  ADD CONSTRAINT detail_survey_values_fk FOREIGN KEY (
+    value_id
+  ) REFERENCES survey_item_values (
+    value_id
+  )
+/
+
+COMMENT ON TABLE survey_result_details IS '調查結果明細';
+
+COMMENT ON COLUMN survey_result_details.detail_id IS 'PK';
+COMMENT ON COLUMN survey_result_details.result_id IS 'FK';
+COMMENT ON COLUMN survey_result_details.value_id IS 'FK';
+COMMENT ON COLUMN survey_result_details.value_desc IS '用戶填寫的值';
+
